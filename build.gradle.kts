@@ -13,7 +13,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("software.amazon.awssdk:s3:2.38.1")
-    implementation("io.minio:minio:8.6.0")
 
 
     runtimeOnly("org.postgresql:postgresql")

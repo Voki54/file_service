@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class S3FileStorageServiceTest {
+class S3FileStorageServiceUploadTest {
 
     @Mock
     private S3Client s3Client;
@@ -82,7 +82,7 @@ class S3FileStorageServiceTest {
         when(multipartFile.getInputStream()).thenThrow(new IOException("Cannot read stream"));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.uploadFile(multipartFile, ""));
-        assertTrue(ex.getMessage().contains("Error uploading file"));
+        assertTrue(ex.getMessage().contains("Failed to upload file"));
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }

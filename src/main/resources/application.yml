@@ -38,11 +38,16 @@ storage:
     bucket: files
     path-style-access: true                # Обязательно для MinIO и Yandex
 
-# Логирование
-#logging:
-#  level:
-#    com.example.fileservice: DEBUG
-#    org.hibernate.SQL: DEBUG
-#    org.hibernate.type.descriptor.sql: TRACE
-#    org.springframework.orm.jpa: DEBUG
-#    org.springframework.transaction: DEBUG
+logging:
+  level:
+    com.example.fileservice: DEBUG
+    #    org.hibernate.SQL: DEBUG
+    #    org.hibernate.type.descriptor.sql: TRACE
+    #    org.springframework.orm.jpa: DEBUG
+    #    org.springframework.transaction: DEBUG
+  file:
+    name: logs/application.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
+#    clean-history-on-start: true

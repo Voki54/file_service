@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, UUID> {
     Optional<FileMetadata> findByStorageKey(String storageKey);
+    int deleteByStorageKey(String storageKey);
 }

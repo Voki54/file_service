@@ -1,6 +1,8 @@
 package com.example.fileservice.service;
 
 import com.example.fileservice.config.S3Config;
+import com.example.fileservice.exception.FileDownloadException;
+import com.example.fileservice.exception.FileNotFoundException;
 import com.example.fileservice.exception.FileUploadException;
 import com.example.fileservice.exception.StorageException;
 import com.example.fileservice.model.FileMetadata;
@@ -12,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -55,6 +55,7 @@ public class S3FileStorageService implements FileStorageService {
         log.info("S3FileStorageService initialization completed");
     }
 
+    // TODO использовать eTag для контроля целостности данных
     @Override
     public String uploadFile(MultipartFile file, String ownerId) {
         String originalFilename = file.getOriginalFilename();
@@ -91,55 +92,41 @@ public class S3FileStorageService implements FileStorageService {
         } catch (Exception e) {
             log.error("Error uploading file: name='{}', key='{}'",
                     originalFilename, key, e);
-            throw new FileUploadException("Error uploading file", e);
+            throw new FileUploadException(key, ownerId, e);
         }
     }
 
-// TODO использовать eTag для контроля целостности данных
+    @Override
+    public byte[] downloadFile(String key) {
+        try (InputStream s3Object = s3Client.getObject(GetObjectRequest.builder()
+                .bucket(config.getBucket())
+                .key(key)
+                .build())) {
+            return s3Object.readAllBytes();
+        } catch (NoSuchKeyException e) {
+            log.warn("File not found: key='{}'", key);
+            throw new FileNotFoundException(key, e);
+        } catch (Exception e) {
+            log.error("Error downloading file: key='{}'", key, e);
+            throw new FileDownloadException(key, e);
+        }
+    }
 
-//    @Override
-//    public String uploadFile(MultipartFile file) {
-//        try (InputStream input = file.getInputStream()) {
-//            long startTime = System.currentTimeMillis();
-//
-//            PutObjectResponse response = s3Client.putObject(
-//                    PutObjectRequest.builder()
-//                            .bucket(config.getBucket())
-//                            .key(key)
-//                            .contentType(contentType)
-//                            .build(),
-//                    RequestBody.fromInputStream(input, fileSize));
-//
-//            long duration = System.currentTimeMillis() - startTime;
-//
-//            log.info("File uploaded successfully: key='{}', size={} bytes, duration={}ms, eTag={}",
-//                    key, fileSize, duration, response.eTag());
-//
-//            return key;
-//        }
-//    }
+    @Override
+    public void deleteFile(String key) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(config.getBucket())
+                    .key(key)
+                    .build());
+            int deleted = metadataRepository.deleteByStorageKey(key);
+            if (deleted == 0) {
+                log.warn("No metadata found for key '{}'", key);
+            }
 
-//    @Override
-//    public byte[] downloadFile(String key) {
-//        try (InputStream s3Object = s3Client.getObject(GetObjectRequest.builder()
-//                .bucket(config.getBucket())
-//                .key(key)
-//                .build())) {
-//            return s3Object.readAllBytes();
-//        } catch (Exception e) {
-//            throw new RuntimeException("Error downloading file", e);
-//        }
-//    }
-//
-//    @Override
-//    public void deleteFile(String key) {
-//        try {
-//            s3Client.deleteObject(DeleteObjectRequest.builder()
-//                    .bucket(config.getBucket())
-//                    .key(key)
-//                    .build());
-//        } catch (Exception e) {
-//            throw new RuntimeException("Error deleting file", e);
-//        }
-//    }
+            log.info("File '{}' deleted successfully from S3 and metadata removed", key);
+        } catch (Exception e) {
+            throw new FileDownloadException(key, e);
+        }
+    }
 }
