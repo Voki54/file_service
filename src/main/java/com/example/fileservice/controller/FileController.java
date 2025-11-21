@@ -1,7 +1,9 @@
 package com.example.fileservice.controller;
 
+import com.example.fileservice.dto.DownloadedFile;
 import com.example.fileservice.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +22,27 @@ public class FileController {
         return ResponseEntity.ok("File uploaded successfully: " + key);
     }
 
+//    @GetMapping()
+//    public ResponseEntity<byte[]> downloadFile(@RequestParam String key) {
+//        byte[] data = fileStorageService.downloadFile(key);
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+//                .body(data);
+//    }
+
     @GetMapping()
-    public ResponseEntity<byte[]> downloadFile(@RequestParam String key) {
-        byte[] data = fileStorageService.downloadFile(key);
+    public ResponseEntity<byte[]> download(@RequestParam String key) {
+
+        DownloadedFile file = fileStorageService.downloadFile(key);
+
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(data);
+                .contentType(MediaType.parseMediaType(file.contentType()))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + file.originalName() + "\""
+                )
+                .contentLength(file.size())
+                .body(file.data());
     }
 
     @DeleteMapping()

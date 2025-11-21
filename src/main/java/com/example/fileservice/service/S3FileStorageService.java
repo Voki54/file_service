@@ -1,10 +1,8 @@
 package com.example.fileservice.service;
 
 import com.example.fileservice.config.S3Config;
-import com.example.fileservice.exception.FileDownloadException;
-import com.example.fileservice.exception.FileNotFoundException;
-import com.example.fileservice.exception.FileUploadException;
-import com.example.fileservice.exception.StorageException;
+import com.example.fileservice.dto.DownloadedFile;
+import com.example.fileservice.exception.*;
 import com.example.fileservice.model.FileMetadata;
 import com.example.fileservice.repository.FileMetadataRepository;
 import jakarta.annotation.PostConstruct;
@@ -97,12 +95,25 @@ public class S3FileStorageService implements FileStorageService {
     }
 
     @Override
-    public byte[] downloadFile(String key) {
+    public DownloadedFile downloadFile(String key) {
+        FileMetadata metadata = metadataRepository.findByStorageKey(key)
+                .orElseThrow(() -> new FileNotFoundException(key));
+
         try (InputStream s3Object = s3Client.getObject(GetObjectRequest.builder()
                 .bucket(config.getBucket())
                 .key(key)
                 .build())) {
-            return s3Object.readAllBytes();
+
+            byte[] bytes = s3Object.readAllBytes();
+
+            return new DownloadedFile(
+                    bytes,
+                    metadata.getOriginalName(),
+                    metadata.getContentType(),
+                    metadata.getSize(),
+                    metadata.getOwnerId(),
+                    metadata.getUploadedAt()
+            );
         } catch (NoSuchKeyException e) {
             log.warn("File not found: key='{}'", key);
             throw new FileNotFoundException(key, e);
@@ -126,7 +137,7 @@ public class S3FileStorageService implements FileStorageService {
 
             log.info("File '{}' deleted successfully from S3 and metadata removed", key);
         } catch (Exception e) {
-            throw new FileDownloadException(key, e);
+            throw new FileDeleteException(key, e);
         }
     }
 }
