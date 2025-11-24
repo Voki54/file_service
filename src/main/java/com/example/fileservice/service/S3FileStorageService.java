@@ -60,7 +60,7 @@ public class S3FileStorageService implements FileStorageService {
         log.info("Starting file upload: name='{}'", originalFilename);
 
         // TODO имя загружаемого файла должно содержать префиксы, включающие userId, userDirId и прочее
-        String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String key = UUID.randomUUID() + "_" + originalFilename;
         log.debug("Generated S3 key: '{}' for original file: '{}'", key, originalFilename);
 
         try (InputStream input = file.getInputStream()) {
