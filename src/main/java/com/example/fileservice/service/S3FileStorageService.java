@@ -16,7 +16,8 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.UUID;
+
+import static com.example.fileservice.util.S3KeyGenerator.generateKey;
 
 @Slf4j
 @Service
@@ -57,10 +58,11 @@ public class S3FileStorageService implements FileStorageService {
     @Override
     public String uploadFile(MultipartFile file, String ownerId) {
         String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+        long fileSize = file.getSize();
         log.info("Starting file upload: name='{}'", originalFilename);
 
-        // TODO имя загружаемого файла должно содержать префиксы, включающие userId, userDirId и прочее
-        String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String key = generateKey(ownerId, originalFilename);
         log.debug("Generated S3 key: '{}' for original file: '{}'", key, originalFilename);
 
         try (InputStream input = file.getInputStream()) {
@@ -69,15 +71,15 @@ public class S3FileStorageService implements FileStorageService {
             s3Client.putObject(PutObjectRequest.builder()
                             .bucket(config.getBucket())
                             .key(key)
-                            .contentType(file.getContentType())
+                            .contentType(contentType)
                             .build(),
-                    RequestBody.fromInputStream(input, file.getSize()));
+                    RequestBody.fromInputStream(input, fileSize));
 
             FileMetadata metadata = FileMetadata.builder()
                     .storageKey(key)
-                    .originalName(file.getOriginalFilename())
-                    .contentType(file.getContentType())
-                    .size(file.getSize())
+                    .originalName(originalFilename)
+                    .contentType(contentType)
+                    .size(fileSize)
                     .ownerId(ownerId)
                     .uploadedAt(Instant.now())
                     .build();

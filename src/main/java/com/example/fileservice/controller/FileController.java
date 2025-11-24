@@ -22,14 +22,6 @@ public class FileController {
         return ResponseEntity.ok("File uploaded successfully: " + key);
     }
 
-//    @GetMapping()
-//    public ResponseEntity<byte[]> downloadFile(@RequestParam String key) {
-//        byte[] data = fileStorageService.downloadFile(key);
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-//                .body(data);
-//    }
-
     @GetMapping()
     public ResponseEntity<byte[]> download(@RequestParam String key) {
 
