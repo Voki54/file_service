@@ -15,7 +15,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
+import java.security.MessageDigest;
 import java.time.Instant;
+import java.util.Base64;
 
 import static com.example.fileservice.util.S3KeyGenerator.generateKey;
 
@@ -66,12 +68,18 @@ public class S3FileStorageService implements FileStorageService {
         log.debug("Generated S3 key: '{}' for original file: '{}'", key, originalFilename);
 
         try (InputStream input = file.getInputStream()) {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] fileBytes = file.getBytes();
+            byte[] md5Bytes = md.digest(fileBytes);
+            String contentMd5 = Base64.getEncoder().encodeToString(md5Bytes);
+
             long startTime = System.currentTimeMillis();
 
             s3Client.putObject(PutObjectRequest.builder()
                             .bucket(config.getBucket())
                             .key(key)
                             .contentType(contentType)
+                            .contentMD5(contentMd5)
                             .build(),
                     RequestBody.fromInputStream(input, fileSize));
 
