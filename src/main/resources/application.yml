@@ -36,7 +36,7 @@ storage:
     access-key: root
     secret-key: password
     bucket: files
-    path-style-access: true                # Обязательно для MinIO и Yandex
+    path-style-access: true                # Обязательно для MinIO и Yandex true изменено на false для теста
 
 logging:
   level:

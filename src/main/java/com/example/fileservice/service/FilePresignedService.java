@@ -10,7 +10,7 @@ import com.example.fileservice.model.FileMetadata;
 import com.example.fileservice.repository.FileMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gradle.internal.impldep.com.amazonaws.services.s3.transfer.internal.CompleteMultipartUpload;
+//import org.gradle.internal.impldep.com.amazonaws.services.s3.transfer.internal.CompleteMultipartUpload;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -60,8 +60,6 @@ public class FilePresignedService {
 
 //@Override
     public InitiateMultipartResponse initiateMultipartUpload(InitiateMultipartRequest request, String ownerId) {
-        // String key = String.format("%s/%s_%s", ownerId, UUID.randomUUID(), normalizeFilename(filename));
-        // TODO имя загружаемого файла должно содержать префиксы, включающие userId, userDirId и прочее
         String key = String.format("%s_%s", UUID.randomUUID(), normalizeFilename(request.filename()));
 
         CreateMultipartUploadRequest createReq = CreateMultipartUploadRequest.builder()
@@ -87,7 +85,7 @@ public class FilePresignedService {
                     .key(key)
                     .uploadId(uploadId)
                     .partNumber(partNumber)
-                    .contentLength(determinePartLength(partNumber, partSize, totalSize))
+//                    .contentLength(determinePartLength(partNumber, partSize, totalSize))
                     .build();
 
             UploadPartPresignRequest presignRequest = UploadPartPresignRequest.builder()

@@ -1,12 +1,24 @@
 package com.example.fileservice.dto;
 
-import software.amazon.awssdk.services.s3.model.CompletedPart;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
 public record CompleteMultipartRequest(
-        String key,
-        String uploadId,
-        List<CompletedPart> parts
+        @JsonProperty("key") String key,
+        @JsonProperty("uploadId") String uploadId,
+        @JsonProperty("parts") List<CompletedPartDto> parts
 ) {
+    @JsonCreator
+    public CompleteMultipartRequest(
+            @JsonProperty("key") String key,
+            @JsonProperty("uploadId") String uploadId,
+            @JsonProperty("parts") List<CompletedPartDto> parts
+    ) {
+        this.key = key;
+        this.uploadId = uploadId;
+        this.parts = parts;
+    }
 }
+

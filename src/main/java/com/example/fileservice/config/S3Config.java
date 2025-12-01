@@ -46,10 +46,15 @@ public class S3Config {
     public S3Presigner s3Presigner() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
 
+        S3Configuration s3Configuration = S3Configuration.builder()
+                .pathStyleAccessEnabled(pathStyleAccess)
+                .build();
+
         return S3Presigner.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.of(region))
+                .serviceConfiguration(s3Configuration)
                 .build();
     }
 }
